@@ -209,6 +209,10 @@ function agregarEventosDeBotones() {
 // Se ejecuta al iniciar la pagina
 function inicializarPagina() {
 
+    // Agregar la ubicacion del usuario en el parrafo del header
+    obtenerUbicacion();
+
+    // Carga un avatar aleatorio de acuerdo al nonbre de usuario
     getAvatar("usuario");
 
     return 1;
@@ -333,8 +337,8 @@ function agregarAlCarrito(event) {
 
 /****************************    APIS   *****************************/
 
-// Devuelve la informacion de la IP del usuario
-function getIP() {
+// Devuelve la informacion de la ubicacion del usuario
+function obtenerUbicacion() {
     let url = "https://ipapi.co/json/";
     fetch(url)
         .then(function (res) {
@@ -342,8 +346,8 @@ function getIP() {
         })
         .then(function (data) {
             document.getElementById(
-                "IP"
-            ).innerText = `Su IP: ${data.ip} - Proveedor: ${data.org} - Ciudad: ${data.city} - Provincia: ${data.region} - Pais: ${data.country_name}`;
+                "ubicacion"
+            ).innerText = `La sucursal mas cercana a su ubicacion queda en ${data.city} - ${data.region} - ${data.country_name}`;
         })
         .catch(function (error) {
             console.log("error" + error);
