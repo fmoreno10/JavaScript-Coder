@@ -42,18 +42,26 @@
                     <li><a href="#" class="nav-link px-2 link-dark">Informatica</a></li>
                 </ul>
 
-                <form class="col-12 col-lg-auto mb-3 mb-lg-0 me-lg-3" role="search">
-                    <input type="search" class="form-control" placeholder="Buscar" aria-label="Search">
+                <form class="col-12 col-lg-auto mb-3 mb-lg-0 me-lg-3 d-flex flex-row" role="search">
+                    <input type="search" class="form-control px-5" placeholder="Buscar" aria-label="Search">
+                    <button type="button" class="btn btn-sm btn-outline-primary mx-3 px-5">Buscar</button>
                 </form>
+
+                <div>
+                    <img id="carrito" src="./assets/carrito.jpg" title="Ver carrito" alt="Carrito"
+                        class="rounded-circle ms-3">
+                    <span id="agregadoCarrito" class="badge bg-danger rounded-pill">3</span>
+                </div>
 
                 <div class="dropdown text-end">
                     <a href="#" class="d-block link-dark text-decoration-none dropdown-toggle" data-bs-toggle="dropdown"
                         aria-expanded="false">
-                        <img src="./assets/carrito.jpg" alt="Carrito" width="32" height="32" class="rounded-circle">
+                        <!-- AVATAR A CARGAR CON API -->
+                        <div id="avatar" class="rounded-circle"></div>
                     </a>
                     <ul class="dropdown-menu text-small">
-                        <li><a class="dropdown-item" href="./pages/carrito.html">Ver Carrito</a></li>
-                        <li><a class="dropdown-item" href="#">Mi Cuenta</a></li>
+                        <li><a class="dropdown-item" href="#">Mis datos</a></li>
+                        <li><a class="dropdown-item" href="#">Mis direcciones</a></li>
                         <li>
                             <hr class="dropdown-divider">
                         </li>

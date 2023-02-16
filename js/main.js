@@ -51,7 +51,7 @@ class Producto {
     }
 
     // Devuelve el stock del producto
-    obtenerStock(cantidadAComprar) {
+    obtenerStock() {
         return this.stock;
     }
 }
@@ -176,7 +176,15 @@ let calcularInteresEn12 = () => INTERES_EN_12 / 100;
 
 /********** FUNCIONES PRINCIPALES *********/
 
+// Agrego los eventos a todos los botones
 function agregarEventosDeBotones() {
+
+    // Asigno el evento al documento para cargar el avatar si el usuario está logueado cuando se cargue la pagina
+    document.addEventListener('DOMContentLoaded', inicializarPagina);
+
+    // Busco el boton del carrito
+    const btnCarrito = document.getElementById("carrito");
+    btnCarrito.addEventListener("click", () => window.location.href = "../pages/carrito.html");
 
     // Busco los botones de agregar al carrito
     const btnsAgregarCarrito = document.getElementsByClassName("btnAgregarCarrito");
@@ -194,15 +202,24 @@ function agregarEventosDeBotones() {
         btn.addEventListener('click', comprar);
     }
 
-    // Asigno el evento al documento para guardar los datos al storage
+    // Asigno el evento al documento para guardar los datos al storage al cerrar la pagina (abrir otra)
     window.addEventListener('pagehide', guardarEnStorage);
 }
 
+// Se ejecuta al iniciar la pagina
+function inicializarPagina() {
+
+    getAvatar("usuario");
+
+    return 1;
+}
+
+// Guardo en el storage los arrays de productos y el carrito, para ser usados en la pagina carrito
 function guardarEnStorage() {
-    
+
     // Guardo en el storage los productos como array de objetos Producto
     localStorage.setItem(PRODUCTOS_DISPONIBLES_KEY, JSON.stringify(listaDeProductos));
-    
+
     // Guardo en el storage el carrito como array de objetos ProductoEnCarrito
     localStorage.setItem(PRODUCTOS_CARRITO_KEY, JSON.stringify(oCarrito.obtenerListaDeProductosDelCarrito()));
 }
@@ -232,6 +249,7 @@ function comprar() {
     })
 }
 
+// Muestra un alert con el mensaje especificado, usando la libreria Sweet Alert
 function mostrarAlert(sMensaje) {
     Swal.fire({
         title: `${sMensaje}`,
@@ -245,12 +263,34 @@ function mostrarAlert(sMensaje) {
 
 }
 
+// Muestra un toast abajo a la derecha con el mensaje especificado, usando la libreria Sweet Alert
+async function mostrarToast(sMensaje) {
+
+    const Toast = Swal.mixin({
+        toast: true,
+        position: 'bottom-right',
+        iconColor: 'white',
+        customClass: {
+            popup: 'colored-toast'
+        },
+        showConfirmButton: false,
+        timer: 1500,
+        timerProgressBar: true
+    })
+    await Toast.fire({
+        icon: 'success',
+        title: sMensaje
+    })
+
+}
+
+// Funcion disparada al hacer click en el boton Agregar al carrito
 function agregarAlCarrito(event) {
 
     // Obtengo el ID del producto desde el input hidden, que está antes del boton de agregar al carrito
     let IdProducto = event.target.previousElementSibling.value
 
-    // Obtengo el ID del producto desde el input number, que está antes del input hidden de arriba
+    // Obtengo la cantidad a comprar desde el input number, que está antes del input hidden de arriba
     let cantidadAComprar = parseInt(event.target.previousElementSibling.previousElementSibling.value);
 
     let oProductoSeleccionado = obtenerProducto(IdProducto);
@@ -270,10 +310,17 @@ function agregarAlCarrito(event) {
             event.target.previousElementSibling.previousElementSibling.value = 1;
             event.target.previousElementSibling.previousElementSibling.setAttribute("max", oProductoSeleccionado.obtenerStock());
 
+            // Actualizo el número arriba del carrito
+            let cantidadEnCarrito = document.getElementById("agregadoCarrito");
+            cantidadEnCarrito.innerText = oCarrito.obtenerCantidadProductosAgregados();
+            cantidadEnCarrito.style.visibility = "visible";
+
             if (oProductoSeleccionado.obtenerStock() == 0) {
+                // Deshabilito el boton de agregar al carrito si no hay stock del producto
                 event.target.disabled = true;
             }
 
+            mostrarToast(`Se agregaron ${cantidadAComprar} ${oProductoSeleccionado.descripcion} al carrito`);
 
         } else {
             mostrarAlert("No hay stock del producto indicado. Intente seleccionar menos cantidad.");
@@ -282,175 +329,42 @@ function agregarAlCarrito(event) {
     } else {
         mostrarAlert("No se encontro el producto en la lista de productos disponibles");
     }
-
-    /*
-    obtenerCantidadProductosAgregados()
-
-    // Agrega un producto al carrito de compras
-    agregarProductoAlCarrito(producto, cantidad) 
-
-    // Devuelve true si el producto especificado se encuentra en el carrito
-    existeProductoEnCarrito(IdProducto)
-
-    // Obtiene el producto especificado del carrito de compras
-    obtenerProductoDelCarrito(IdProducto) 
-
-    // Actualiza la cantidad del producto en el carrito de compras
-    actualizarProductoDelCarrito(IdProducto, cantidad) 
-
-    // Elimina el producto especificado del carrito de compras
-    eliminarProductoDelCarrito(IdProducto) 
-
-    // Suma los subtotales de los productos en el carrito
-    calcularPrecioTotal() {
-    */
 }
 
-// Simula la compra de 1 o mas articulos por parte del usuario
-function simularCompra() {
-    let respuesta;
-    let precioTotal = 0;
+/****************************    APIS   *****************************/
 
-    inicializarProductos();
-    limpiarCarrito();
-
-    // Se muestran los productos disponibles para la compra
-    mostrarProductos();
-
-    // Se da la opcion al usuario de cargar nuevos productos 
-    respuesta = obtenerRespuesta("¿Desea ingresar un nuevo producto?");
-
-    if (respuesta == "S") {
-        if (crearProductos() < 0) {
-            return -1; // El usuario cancelo el programa
-        }
-    }
-
-    // Se solicita al usuario que ingrese los productos que desea comprar y la cantidad
-    if (comprarProductos() < 0) {
-        return -1; // El usuario cancelo el programa
-    }
-
-    // Se le pregunta al usuario si quiere actualizar la cantidad de algun producto del carrito
-    respuesta = obtenerRespuesta("¿Desea modificar la cantidad de algun producto del carrito?");
-
-    while (respuesta == "S") {
-
-        let nombreProducto = prompt("Ingrese el nombre del producto que desea actualizar en el carrito: ");
-
-        if (nombreProducto == "" || nombreProducto == null) {
-            break; // El usuario presiono Cancelar o no ingreso datos
-        }
-
-        nombreProducto = nombreProducto.toUpperCase();
-
-        if (existeProductoEnCarrito(nombreProducto)) {
-            let nuevaCantidad = obtenerCantidad("Ingrese cuantos items de " + nombreProducto + " desea dejar en el carrito: ");
-
-            if (nuevaCantidad < 0) {
-                break; // Si el usuario cancela el ingreso de cantidad, sale del bucle
-            }
-
-            // Obtengo el producto que ingreso el usuario
-            let oProducto = obtenerProducto(nombreProducto);
-
-            // Obtengo el producto del carrito para saber cuanta cantidad hay que devolver al stock
-            let oProductoEnCarrito = obtenerProductoDelCarrito(nombreProducto);
-
-            // Primero quito la cantidad agregada al carrito para devolver stock
-            oProducto.quitarDelCarrito(oProductoEnCarrito.cantidad);
-
-            // Verificar que haya stock
-            if (oProducto.hayStock(nuevaCantidad)) {
-
-                // Actualizo la cantidad disponible del producto
-                oProducto.agregarAlCarrito(nuevaCantidad);
-
-                // Actualizo la cantidad del producto en el carrito
-                actualizarProductoDelCarrito(nombreProducto, nuevaCantidad);
-
-            } else {
-                alert("No hay stock del producto indicado. Intente seleccionar menos cantidad.");
-            }
-        } else {
-            alert("No se encontro el producto " + nombreProducto + " en el carrito.");
-        }
-
-        respuesta = obtenerRespuesta("¿Desea actualizar la cantidad de otro producto en el carrito?");
-
-    }
-
-    // Se le pregunta al usuario si quiere quitar algun producto del carrito
-    respuesta = obtenerRespuesta("¿Desea quitar algun producto del carrito?");
-
-    while (respuesta == "S") {
-
-        let nombreProducto = prompt("Ingrese el nombre del producto que desea quitar del carrito: ");
-
-        if (nombreProducto == "" || nombreProducto == null) {
-            break; // El usuario presiono Cancelar o no ingreso datos
-        }
-
-        nombreProducto = nombreProducto.toUpperCase();
-
-        if (existeProductoEnCarrito(nombreProducto)) {
-
-            // Obtengo el producto de los disponibles
-            let oProducto = obtenerProducto(nombreProducto);
-
-            // Obtengo el producto del carrito para saber cuanta cantidad hay que devolver al stock
-            let oProductoEnCarrito = obtenerProductoDelCarrito(nombreProducto);
-
-            // Actualizo la cantidad disponible del producto
-            oProducto.quitarDelCarrito(oProductoEnCarrito.cantidad);
-
-            eliminarProductoDelCarrito(nombreProducto);
-
-        } else {
-            alert("No se encontro el producto " + nombreProducto + " en el carrito.");
-        }
-
-        respuesta = obtenerRespuesta("¿Desea quitar otro producto del carrito?");
-
-    }
-
-    // Se muestra el carrito de compras antes de realizar el pago
-    mostrarProductosDelCarrito();
-
-    precioTotal = calcularPrecioTotal();
-
-    // Se le pregunta al usuario si quiere financiar el monto total y de ser afirmativo, en cuantas cuotas desea pagar    
-    respuesta = obtenerRespuesta("¿Desea pagar en cuotas?");
-
-    // El usuario va a pagar en cuotas
-    if (respuesta == "S") {
-        let montoCuota;
-        let cantidadCuotas;
-
-        cantidadCuotas = elegirPlanDePago();
-
-        if (cantidadCuotas) {
-
-            // Se calcula el monto de las cuotas
-            montoCuota = calcularMontoCuota(precioTotal, cantidadCuotas);
-
-            // Se muestra el monto total a pagar y el monto de las cuotas
-            alert("Usted pagara el monto total de $" + precioTotal + " en " + cantidadCuotas + " pagos de $" + montoCuota);
-
-        } else { // el usuario selecciono 0 para salir y pagar en un pago
-            alert("Usted pagara $" + precioTotal + " en un solo pago");
-        }
-
-    } else { // el usuario paga el monto total
-        alert("El precio total es: $" + precioTotal);
-    }
-
-    return 1;
+// Devuelve la informacion de la IP del usuario
+function getIP() {
+    let url = "https://ipapi.co/json/";
+    fetch(url)
+        .then(function (res) {
+            return res.json();
+        })
+        .then(function (data) {
+            document.getElementById(
+                "IP"
+            ).innerText = `Su IP: ${data.ip} - Proveedor: ${data.org} - Ciudad: ${data.city} - Provincia: ${data.region} - Pais: ${data.country_name}`;
+        })
+        .catch(function (error) {
+            console.log("error" + error);
+        });
 }
 
+// Devuelve un avatar aleatorio segun el nombre ingresado
+function getAvatar(sNombreUsuario) {
+    let avatarId = sNombreUsuario;
+    let url = "https://api.multiavatar.com/" + JSON.stringify(avatarId);
+    fetch(url)
+        .then((res) => res.text())
+        .then((svg) => {
+            document.getElementById("avatar").innerHTML = `${svg}`;
+        })
+        .catch(function (error) {
+            console.log("error" + error);
+        });
+}
 
-
-/********** FUNCIONES DE PRODUCTOS DISPONIBLES *********/
+/**************** FUNCIONES DE PRODUCTOS DISPONIBLES ****************/
 
 // Devuelve true si el producto especificado se encuentra en la lista de productos
 function existeProducto(IdProducto) {
@@ -511,7 +425,7 @@ function cargarProductos() {
 
         let oColumna = document.createElement("div");
 
-        oColumna.classList = "col";
+        oColumna.classList = "col d-flex align-items-stretch";
 
         oFila.appendChild(oColumna);
 
