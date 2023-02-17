@@ -56,6 +56,52 @@ class Producto {
     }
 }
 
+// Clase con la lista de productos disponibles para comprar
+class ProductosDisponibles {
+
+    constructor(listaDeProductos) {
+        this.listaDeProductos = listaDeProductos; // Array con objetos Producto disponibles para comprar
+    }
+
+    obtenerListaDeProductosDisponibles() {
+        return this.listaDeProductos;
+    }
+
+    //agregarProducto(id, descripcion, precio, stock, pathIMG) {
+    agregarProducto(oProducto) {
+        // Agrego los productos ingresados como objetos en el array de productos de la clase
+        this.listaDeProductos.push(new Producto(oProducto.id, oProducto.descripcion, oProducto.precio, oProducto.stock, oProducto.pathIMG));
+
+    }
+
+    // Devuelve true si el producto especificado se encuentra en la lista de productos
+    existeProducto(IdProducto) {
+        return this.listaDeProductos.some(producto => producto.id == IdProducto);
+
+    }
+
+    // Devuelve el producto especificado de la lista de productos
+    obtenerProducto(IdProducto) {
+
+        if (this.existeProducto(IdProducto)) {
+            return this.listaDeProductos.find(producto => producto.id == IdProducto);
+        }
+
+        return null;
+    }
+
+    // Devuelve un array con los productos que coinciden con la descripcion especificada
+    buscarProducto(sDescripcionProducto) {
+        return this.listaDeProductos.filter(producto => {
+            let descripcionMinusculas = producto.descripcion.toLowerCase();
+            let descripcionBuscarMinusculas = sDescripcionProducto.toLowerCase();
+            return descripcionMinusculas.includes(descripcionBuscarMinusculas);
+        });
+
+    }
+}
+
+
 // Clase para los productos que se agregan al carrito de compras
 class ProductoEnCarrito {
     constructor(producto, cantidadProducto) {
@@ -83,6 +129,10 @@ class Carrito {
 
     obtenerCantidadProductosAgregados() {
         return this.listaDeProductosEnCarrito.length;
+    }
+
+    obtenerCantidadProductosTotalesAgregados() {
+        return this.listaDeProductosEnCarrito.reduce((acumulador, producto) => acumulador + producto.cantidad, 0);
     }
 
     obtenerListaDeProductosDelCarrito() {
@@ -163,8 +213,8 @@ const INTERES_EN_12 = 100;
 const PRODUCTOS_DISPONIBLES_KEY = "productosDisponibles"; // Para almacenar en el storage
 const PRODUCTOS_CARRITO_KEY = "productosEnCarrito"; // Para almacenar en el storage
 
-// array de objetos de tipo Producto
-let listaDeProductos = [];
+// Lista de Productos disponibles para comprar
+let oListaDeProductos = new ProductosDisponibles([]);
 
 // Carrito de compras GLOBAL
 let oCarrito = new Carrito([]);
@@ -189,6 +239,14 @@ function agregarEventosDeBotones() {
     // Busco los botones de agregar al carrito
     const btnsAgregarCarrito = document.getElementsByClassName("btnAgregarCarrito");
 
+    // Agrego el evento click al boton de busqueda
+    const btnBuscar = document.getElementById("btnBuscar");
+    btnBuscar.addEventListener("click", buscarProducto);
+
+    // Agrego el evento buscar al input de busqueda
+    //const inputBuscar = document.getElementById("textoABuscar");
+    //inputBuscar.addEventListener("search", buscarProducto);
+
     // Les asigno el evento click que acciona agregar el producto al carrito 
     for (const btn of btnsAgregarCarrito) {
         btn.addEventListener('click', agregarAlCarrito);
@@ -204,6 +262,15 @@ function agregarEventosDeBotones() {
 
     // Asigno el evento al documento para guardar los datos al storage al cerrar la pagina (abrir otra)
     window.addEventListener('pagehide', guardarEnStorage);
+}
+
+// Busca los productos al hacer click al boton Buscar
+function buscarProducto(event) {
+
+    let textoABuscar = document.getElementById("textoABuscar");
+
+    renderizarProductos(oListaDeProductos.buscarProducto(textoABuscar.value.trim()));
+
 }
 
 // Se ejecuta al iniciar la pagina
@@ -222,7 +289,7 @@ function inicializarPagina() {
 function guardarEnStorage() {
 
     // Guardo en el storage los productos como array de objetos Producto
-    localStorage.setItem(PRODUCTOS_DISPONIBLES_KEY, JSON.stringify(listaDeProductos));
+    localStorage.setItem(PRODUCTOS_DISPONIBLES_KEY, JSON.stringify(oListaDeProductos.obtenerListaDeProductosDisponibles()));
 
     // Guardo en el storage el carrito como array de objetos ProductoEnCarrito
     localStorage.setItem(PRODUCTOS_CARRITO_KEY, JSON.stringify(oCarrito.obtenerListaDeProductosDelCarrito()));
@@ -297,7 +364,7 @@ function agregarAlCarrito(event) {
     // Obtengo la cantidad a comprar desde el input number, que está antes del input hidden de arriba
     let cantidadAComprar = parseInt(event.target.previousElementSibling.previousElementSibling.value);
 
-    let oProductoSeleccionado = obtenerProducto(IdProducto);
+    let oProductoSeleccionado = oListaDeProductos.obtenerProducto(IdProducto);
 
     if (oProductoSeleccionado !== null) {
 
@@ -316,7 +383,7 @@ function agregarAlCarrito(event) {
 
             // Actualizo el número arriba del carrito
             let cantidadEnCarrito = document.getElementById("agregadoCarrito");
-            cantidadEnCarrito.innerText = oCarrito.obtenerCantidadProductosAgregados();
+            cantidadEnCarrito.innerText = oCarrito.obtenerCantidadProductosTotalesAgregados();
             cantidadEnCarrito.style.visibility = "visible";
 
             if (oProductoSeleccionado.obtenerStock() == 0) {
@@ -341,15 +408,13 @@ function agregarAlCarrito(event) {
 function obtenerUbicacion() {
     let url = "https://ipapi.co/json/";
     fetch(url)
-        .then(function (res) {
-            return res.json();
-        })
-        .then(function (data) {
+        .then(res => res.json())
+        .then(data => {
             document.getElementById(
                 "ubicacion"
             ).innerText = `La sucursal mas cercana a su ubicacion queda en ${data.city} - ${data.region} - ${data.country_name}`;
         })
-        .catch(function (error) {
+        .catch(error => {
             console.log("error" + error);
         });
 }
@@ -359,31 +424,13 @@ function getAvatar(sNombreUsuario) {
     let avatarId = sNombreUsuario;
     let url = "https://api.multiavatar.com/" + JSON.stringify(avatarId);
     fetch(url)
-        .then((res) => res.text())
-        .then((svg) => {
+        .then(res => res.text())
+        .then(svg => {
             document.getElementById("avatar").innerHTML = `${svg}`;
         })
-        .catch(function (error) {
+        .catch(error => {
             console.log("error" + error);
         });
-}
-
-/**************** FUNCIONES DE PRODUCTOS DISPONIBLES ****************/
-
-// Devuelve true si el producto especificado se encuentra en la lista de productos
-function existeProducto(IdProducto) {
-    return listaDeProductos.some(producto => producto.id == IdProducto);
-
-}
-
-// Devuelve el producto especificado de la lista de productos
-function obtenerProducto(IdProducto) {
-
-    if (existeProducto(IdProducto)) {
-        return listaDeProductos.find(producto => producto.id == IdProducto);
-    }
-
-    return null;
 }
 
 // Inicializo el array con algunos productos y los cargo en el storage
@@ -408,24 +455,32 @@ function inicializarProductos() {
     // Guardo en el storage los productos como array de objetos
     localStorage.setItem(PRODUCTOS_DISPONIBLES_KEY, JSON.stringify(productos));
 
-    return 1;
-}
-
-// Carga los productos del storage en la pagina
-function cargarProductos() {
-
     // Obtengo el array de productos Disponibles del storage
     let productosDisponibles = JSON.parse(localStorage.getItem(PRODUCTOS_DISPONIBLES_KEY));
 
-    let oFila = document.getElementById("fila");
-
-    // Cargo todos los productos del storage y los formateo con HTML
+    // Cargo todos los productos del storage en el array GLOBAL de productos disponibles
     for (let i = 0; i < productosDisponibles.length; i++) {
 
         let oProducto = productosDisponibles[i];
 
-        // Agrego los productos ingresados como objetos en el array global de productos
-        listaDeProductos.push(new Producto(oProducto.id, oProducto.descripcion, oProducto.precio, oProducto.stock, oProducto.pathIMG));
+        oListaDeProductos.agregarProducto(oProducto);
+    }
+
+    return 1;
+}
+
+// Carga los productos con la estructura HTML
+function renderizarProductos(oProductos) {
+
+    let oFila = document.getElementById("fila");
+
+    // Elimino primero los hijos de la fila para escribir los nuevos hijos
+    oFila.replaceChildren();
+
+    // Cargo todos los productos del storage y los formateo con HTML
+    for (let i = 0; i < oProductos.length; i++) {
+
+        let oProducto = oProductos[i];
 
         let oColumna = document.createElement("div");
 
@@ -525,6 +580,13 @@ function cargarProductos() {
         oCardButtons.appendChild(oBuyButton);
     }
 
+}
+
+// Carga los productos del storage en la pagina
+function cargarTodosLosProductos() {
+
+    renderizarProductos(oListaDeProductos.obtenerListaDeProductosDisponibles());
+
     return 1;
 
 }
@@ -535,8 +597,8 @@ function cargarProductos() {
 // Inicializo el array con algunos productos y los cargo en el storage
 inicializarProductos();
 
-// Carga los productos del storage en la pagina
-cargarProductos();
+// Carga todos los productos del storage en la pagina
+cargarTodosLosProductos();
 
 // Ejecuto la funcion para agregar eventos
 agregarEventosDeBotones();

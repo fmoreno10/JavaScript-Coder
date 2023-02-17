@@ -69,6 +69,10 @@ class Carrito {
         return this.listaDeProductosEnCarrito.length;
     }
 
+    obtenerCantidadProductosTotalesAgregados() {
+        return this.listaDeProductosEnCarrito.reduce((acumulador, producto) => acumulador + producto.cantidad, 0);
+    }
+
     obtenerListaDeProductosDelCarrito() {
         return this.listaDeProductosEnCarrito;
     }
@@ -502,7 +506,7 @@ function cargarCarrito() {
     let oLista = document.getElementById("lista");
     let cantidadCarrito = document.getElementById("cantidadCarrito");
 
-    let cantidad = oCarrito.obtenerCantidadProductosAgregados();
+    let cantidad = oCarrito.obtenerCantidadProductosTotalesAgregados();
 
     cantidadCarrito.innerText = cantidad;
     let productosEnCarrito = oCarrito.obtenerListaDeProductosDelCarrito();
