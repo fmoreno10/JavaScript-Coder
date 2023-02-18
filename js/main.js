@@ -23,6 +23,14 @@
 
 */
 
+class Usuario {
+    constructor(usuario, password, recordar) {
+        this.usuario = usuario;
+        this.password = password;
+        this.recordar = recordar;
+    }
+}
+
 // Clase para los productos disponibles
 class Producto {
     constructor(id, descripcion, precio, stock, pathIMG) {
@@ -234,7 +242,8 @@ function agregarEventosDeBotones() {
 
     // Busco el boton del carrito
     const btnCarrito = document.getElementById("carrito");
-    btnCarrito.addEventListener("click", () => window.location.href = "../pages/carrito.html");
+    //btnCarrito.addEventListener("click", () => window.location.href = "../pages/carrito.html");
+    btnCarrito.addEventListener("click", mostrarPaginaDelCarrito);
 
     // Busco los botones de agregar al carrito
     const btnsAgregarCarrito = document.getElementsByClassName("btnAgregarCarrito");
@@ -273,16 +282,171 @@ function buscarProducto(event) {
 
 }
 
+// Muestra la pagina del carrito
+function mostrarPaginaDelCarrito(){
+    let oUsuario = obtenerUsuario();
+
+    // Establezco la clave para mostrar la pagina del carrito en la pagina de login
+    localStorage.setItem("mostrarPagina","carrito");
+
+    // Si hay usuario logueado, muestro la pagina del carrito, sino muestro la pagina de login
+    window.location.href = oUsuario != null ? "../pages/carrito.html" : "../pages/login.html";
+
+}
+
+// Cierra la sesion del usuario logueado
+function cerrarSesion() {
+
+    let oUsuario = obtenerUsuario();
+
+    if (oUsuario != null) {
+
+        if(oUsuario.recordar){
+            // Si recordar es verdadero, el usuario esta cargado en el local storage
+            localStorage.removeItem("usuario");
+        }else{
+            // Sino, esta cargado en el session storage
+            sessionStorage.removeItem("usuario");
+        }
+
+    }
+    
+    let contenedorUsuario = document.getElementById("contenedorUsuario");
+    contenedorUsuario.style.visibility = "hidden";
+
+    // recargo la pagina
+    location.reload();
+
+}
+
+// Render Inicio Sesion
+function renderLogin() {
+
+    let oULLogin = document.getElementById("ulLogin");
+
+    // Elimino primero los hijos para escribir los nuevos hijos
+    oULLogin.replaceChildren();
+
+    let oListItem = document.createElement("li");
+    oListItem.classList = "d-flex flex-column align-items-center justify-content-center";
+    oULLogin.appendChild(oListItem);
+
+    let oAnchor = document.createElement("a");
+    oAnchor.classList = "dropdown-item align-self-center";
+    oAnchor.href = "../pages/login.html";
+    oAnchor.innerText = "INGRESAR";
+    oListItem.appendChild(oAnchor);
+}
+
+// Renderizo el menu de usuario
+function renderUsuario(sUsuario) {
+
+    let oULLogin = document.getElementById("ulLogin");
+
+    // Elimino primero los hijos para escribir los nuevos hijos
+    oULLogin.replaceChildren();
+
+    let oListItem1 = document.createElement("li");
+    oListItem1.classList = "d-flex flex-column align-items-center justify-content-center";
+    oULLogin.appendChild(oListItem1);
+
+    let oAnchor1 = document.createElement("a");
+    oAnchor1.classList = "dropdown-item align-self-center";
+    oAnchor1.href = "#";
+    oAnchor1.innerText = "Mis datos";
+    oListItem1.appendChild(oAnchor1);
+
+    let oListItem2 = document.createElement("li");
+    oListItem2.classList = "d-flex flex-column align-items-center justify-content-center";
+    oULLogin.appendChild(oListItem2);
+
+    let oAnchor2 = document.createElement("a");
+    oAnchor2.classList = "dropdown-item align-self-center";
+    oAnchor2.href = "#";
+    oAnchor2.innerText = "Mis Direcciones";
+    oListItem2.appendChild(oAnchor2);
+
+    let oListItem3 = document.createElement("li");
+    oListItem3.classList = "d-flex flex-column align-items-center justify-content-center";
+    oULLogin.appendChild(oListItem3);
+
+    let oHR = document.createElement("hr");
+    oHR.classList = "dropdown-divider";
+    oListItem3.appendChild(oHR);
+
+    let oListItem4 = document.createElement("li");
+    oListItem4.classList = "d-flex flex-column align-items-center justify-content-center";
+    oULLogin.appendChild(oListItem4);
+
+    let oAnchor4 = document.createElement("a");
+    oAnchor4.classList = "dropdown-item align-self-center";
+    oAnchor4.id = "cerrarSesion";
+    oAnchor4.href = "#";
+    oAnchor4.innerText = "Cerrar Sesion";
+    oListItem4.appendChild(oAnchor4);
+
+    let contenedorUsuario = document.getElementById("contenedorUsuario");
+    contenedorUsuario.style.visibility = "visible";
+
+    let usuario = document.getElementById("usuario");
+    usuario.innerText = sUsuario;
+
+    // Agrego el evento link de cerrar sesion
+    const oCerrarSesion = document.getElementById("cerrarSesion");
+    oCerrarSesion.addEventListener("click", cerrarSesion);
+
+}
+
 // Se ejecuta al iniciar la pagina
 function inicializarPagina() {
 
     // Agregar la ubicacion del usuario en el parrafo del header
     obtenerUbicacion();
 
-    // Carga un avatar aleatorio de acuerdo al nonbre de usuario
-    getAvatar("usuario");
+    let oUsuario = obtenerUsuario();
+
+    if (oUsuario == null) {
+
+        // Si no esta el usuario en el localStorage y en el sessionStorage, renderizar ingreso de usuario
+        renderLogin();
+
+        // Y cargo un avatar de no hay usuario logueado
+        document.getElementById("avatar").innerHTML = "<img src='../assets/nouser.jpg' alt='Avatar sin usuario' class='rounded-circle avatar'>";
+        
+
+    } else {
+
+        // El usuario esta logueado, renderizo el menu
+        renderUsuario(oUsuario.usuario);
+
+        // Carga un avatar aleatorio de acuerdo al nombre de usuario
+        getAvatar(oUsuario.usuario);
+
+    }
+
 
     return 1;
+}
+
+// Obtengo el usuario, ya sea del local o session storage
+function obtenerUsuario() {
+    let txtUsuario = localStorage.getItem("usuario");
+
+    if (txtUsuario == "null" || txtUsuario == null) {
+        // Busco el usuario en el session storage
+        txtUsuario = sessionStorage.getItem("usuario");
+
+        if (txtUsuario == "null" || txtUsuario == null) {
+            // Si no está en el session storage ni en el local storage, asigno null para simplificar la comparacion
+            txtUsuario = null;
+            return txtUsuario;
+        }
+    }
+
+    let oUsuario = JSON.parse(txtUsuario);
+
+    // Devuelvo un objeto usuario
+    return oUsuario;
 }
 
 // Guardo en el storage los arrays de productos y el carrito, para ser usados en la pagina carrito
@@ -412,7 +576,7 @@ function obtenerUbicacion() {
         .then(data => {
             document.getElementById(
                 "ubicacion"
-            ).innerText = `La sucursal mas cercana a su ubicacion queda en ${data.city} - ${data.region} - ${data.country_name}`;
+            ).innerText = ` ${data.city} - ${data.region} - ${data.country_name}`;
         })
         .catch(error => {
             console.log("error" + error);
@@ -437,7 +601,9 @@ function getAvatar(sNombreUsuario) {
 function inicializarProductos() {
 
     // Limpio el storage
-    localStorage.clear();
+    //localStorage.clear();
+    //localStorage.removeItem(PRODUCTOS_DISPONIBLES_KEY);
+    //localStorage.removeItem(PRODUCTOS_CARRITO_KEY);
 
     // Inicializo un array de productos para almacenarlos en el storage
     let productos = [

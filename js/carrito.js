@@ -488,6 +488,9 @@ function cargarCarritoDelStorage() {
 // Cargo los productos del carrito en la pagina con elementos HTML
 function cargarCarrito() {
 
+    // Borro la clave establecida en el index para mostrar la pagina del carrito en la pagina de login
+    localStorage.removeItem("mostrarPagina");
+
     // Obtengo el array de productos Disponibles del storage
     let productosDisponibles = JSON.parse(localStorage.getItem(PRODUCTOS_DISPONIBLES_KEY));
 
@@ -512,7 +515,7 @@ function cargarCarrito() {
     let productosEnCarrito = oCarrito.obtenerListaDeProductosDelCarrito();
 
     let btnPagar = document.getElementById("btnPagar");
-    console.log(cantidad);
+
     // Deshabilitar el boton de pago si el carrito está vacío
     btnPagar.disabled = cantidad == 0;
 
