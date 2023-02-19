@@ -1,4 +1,10 @@
 
+/*************************************************************************************************/
+/*                                                                                               */
+/*                                         CONSTANTES                                            */
+/*                                                                                               */
+/*************************************************************************************************/
+
 // Defino como constantes los intereses a aplicar segun el plan de pago
 const INTERES_EN_3 = 50;
 const INTERES_EN_6 = 75;
@@ -7,14 +13,31 @@ const PRODUCTOS_DISPONIBLES_KEY = "productosDisponibles"; // Para almacenar en e
 const PRODUCTOS_CARRITO_KEY = "productosEnCarrito"; // Para almacenar en el storage
 const ETIQUETA_PRECIO_TOTAL = "precioTotal"; // Etiqueta con el monto total a pagar
 
+/*************************************************************************************************/
+/*                                                                                               */
+/*                                         CALLBACKS                                             */
+/*                                                                                               */
+/*************************************************************************************************/
+
+// Funciones anonimas que van a ser utilizadas como callbacks para calcular el interes segun la cantidad de cuotas
+let calcularInteresEn3 = () => INTERES_EN_3 / 100;
+let calcularInteresEn6 = () => INTERES_EN_6 / 100;
+let calcularInteresEn12 = () => INTERES_EN_12 / 100;
+
+/*************************************************************************************************/
+/*                                                                                               */
+/*                                          CLASES                                               */
+/*                                                                                               */
+/*************************************************************************************************/
+
 // Clase para los productos disponibles
 class Producto {
     constructor(id, descripcion, precio, stock, pathIMG) {
         this.id = id;
         this.pathIMG = pathIMG;
         this.descripcion = descripcion.toUpperCase();
-        this.precio = parseFloat(precio);
-        this.stock = parseInt(stock);
+        this.precio = parseFloat(precio) ?? 0;
+        this.stock = parseInt(stock) ?? 0;
     }
 
     // Cada vez que se agrega el producto al carrito, se decrementa el stock
@@ -145,18 +168,23 @@ class Carrito {
 
 }
 
+/*************************************************************************************************/
+/*                                                                                               */
+/*                                          GLOBAL                                               */
+/*                                                                                               */
+/*************************************************************************************************/
+
 // array de objetos de tipo Producto
 let listaDeProductos = [];
 
 // Carrito de compras GLOBAL
 let oCarrito;
 
-// Funciones anonimas que van a ser utilizadas como callbacks para calcular el interes segun la cantidad de cuotas
-let calcularInteresEn3 = () => INTERES_EN_3 / 100;
-let calcularInteresEn6 = () => INTERES_EN_6 / 100;
-let calcularInteresEn12 = () => INTERES_EN_12 / 100;
-
-/********** FUNCIONES DE LA FINANCIACION *********/
+/*************************************************************************************************/
+/*                                                                                               */
+/*                             FUNCIONES DE LA FINANCIACION                                      */
+/*                                                                                               */
+/*************************************************************************************************/
 
 //Calcula el monto de la cuota segun la cantidad de cuotas elegidas
 function calcularMontoCuota(precioTotal, cuotas) {
@@ -225,7 +253,11 @@ function calcularInteres(precio, calcularInteresCB) {
     return precio + precio * calcularInteresCB();
 }
 
-/********** FUNCIONES DE PRODUCTOS DISPONIBLES *********/
+/*************************************************************************************************/
+/*                                                                                               */
+/*                               FUNCIONES DE PRODUCTOS DISPONIBLES                              */
+/*                                                                                               */
+/*************************************************************************************************/
 
 // Devuelve true si el producto especificado se encuentra en la lista de productos
 function existeProducto(IdProducto) {
@@ -243,54 +275,11 @@ function obtenerProducto(IdProducto) {
     return null;
 }
 
-/********** FUNCIONES PRINCIPALES *********/
-
-// Asigna los eventos a los elementos
-function agregarEventos() {
-
-    // Asigno el evento al documento para cargar los productos del carrito cuando se cargue la pagina
-    document.addEventListener('DOMContentLoaded', cargarCarrito);
-
-    // Asigno el evento para mostrar la etiqueta con el monto a pagar cuando se termine de cargar la pagina
-    window.addEventListener('pageshow', cargarPago);
-
-    // Asigno el evento al boton de pagar
-    let btnPagar = document.getElementById("btnPagar");
-    btnPagar.addEventListener('click', pagar);
-
-    // Asigno el evento al documento para guardar los datos al storage
-    window.addEventListener('pagehide', guardarEnStorage);
-
-    // Asigno el evento al cambiar la cantidad de cuotas
-    let selCuotas = document.getElementById("cuotas");
-    selCuotas.addEventListener('change', cargarPago);
-
-    // Busco los botones de agregar cantidad
-    const btnsAgregarCantidad = document.getElementsByClassName("spanMas");
-
-    // Les asigno el evento click que acciona agregar mas cantidad del producto al carrito 
-    for (const btn of btnsAgregarCantidad) {
-        btn.addEventListener('click', agregarCantidadAlCarrito);
-    }
-
-    // Busco los botones de sacar cantidad
-    const btnsSacarCantidad = document.getElementsByClassName("spanMenos");
-
-    // Les asigno el evento click que acciona sacar cantidad del producto al carrito 
-    for (const btn of btnsSacarCantidad) {
-        btn.addEventListener('click', sacarCantidadAlCarrito);
-    }
-
-    // Busco los botones de quitar producto (tachito)
-    const btnsQuitar = document.getElementsByClassName("trashIcon");
-
-    // Les asigno el evento click que acciona quitar el producto del carrito 
-    for (const btn of btnsQuitar) {
-        btn.addEventListener('click', quitarDelCarrito);
-    }
-
-    return 1;
-}
+/*************************************************************************************************/
+/*                                                                                               */
+/*                                       FUNCIONES PRINCIPALES                                   */
+/*                                                                                               */
+/*************************************************************************************************/
 
 // Boton de tacho para quitar el producto del carrito
 function quitarDelCarrito(event) {
@@ -368,8 +357,6 @@ function agregarCantidadAlCarrito(event) {
         cargarPago();
 
     }
-
-
 }
 
 // Boton de menos en el carrito para sacar cantidad
@@ -435,54 +422,73 @@ function cargarPago() {
 
 }
 
-// Realiza el pago
+// Simula el pago
 function pagar() {
 
-    let oCuotas = document.getElementById("cuotas");
+    Swal.fire({
+        title: `Redirecciona a la pagina de pago...`,
+        showDenyButton: false,
+        confirmButtonText: 'Aceptar',
+        denyButtonText: `Cancelar`,
+    }).then((result) => {
+        if (result.isConfirmed) {
+            window.location.href = "../index.html"
+        }
+    });
 
-    let productosEnCarrito = JSON.parse(localStorage.getItem(PRODUCTOS_CARRITO_KEY));
-
-    let precioTotal = 0;
-
-    // Cargo todos los productos del storage en el array listaDeProductos para tener los metodos
-    for (let i = 0; i < productosEnCarrito.length; i++) {
-        let oProductoEnCarrito = productosEnCarrito[i];
-
-        precioTotal = precioTotal + (oProductoEnCarrito.cantidad * oProductoEnCarrito.precio);
-    }
-
-    // Se calcula el monto de las cuotas
-    let montoCuota = calcularMontoCuota(precioTotal, oCuotas.value);
-
-    //alert("El monto de la cuota es de : " + montoCuota);
-    alert(montoCuota);
 }
 
-// Guardo los productos disponibles y los productos del carrito en el storage
-function guardarEnStorage() {
+/*************************************************************************************************/
+/*                                                                                               */
+/*                                  FUNCIONES DE INICIALIZACION                                  */
+/*                                                                                               */
+/*************************************************************************************************/
 
-    // Guardo en el storage los productos como array de objetos Producto
-    localStorage.setItem(PRODUCTOS_DISPONIBLES_KEY, JSON.stringify(listaDeProductos));
+// Asigna los eventos a los elementos
+function agregarEventos() {
 
-    // Guardo en el storage el carrito como array de objetos ProductoEnCarrito
-    localStorage.setItem(PRODUCTOS_CARRITO_KEY, JSON.stringify(oCarrito.obtenerListaDeProductosDelCarrito()));
-}
+    // Asigno el evento al documento para cargar los productos del carrito cuando se cargue la pagina
+    document.addEventListener('DOMContentLoaded', cargarCarrito);
 
-// Carga en el objeto Global oCarrito, el array de productos carrito almacenados en el storage
-function cargarCarritoDelStorage() {
+    // Asigno el evento para mostrar la etiqueta con el monto a pagar cuando se termine de cargar la pagina
+    window.addEventListener('pageshow', cargarPago);
 
-    let productosEnCarrito = JSON.parse(localStorage.getItem(PRODUCTOS_CARRITO_KEY));
+    // Asigno el evento al boton de pagar
+    let btnPagar = document.getElementById("btnPagar");
+    btnPagar.addEventListener('click', pagar);
 
-    oCarrito = new Carrito();
+    // Asigno el evento al documento para guardar los datos al storage
+    window.addEventListener('pagehide', guardarEnStorage);
 
-    // Cargo todos los productos del storage en el array listaDeProductos para tener los metodos
-    for (let i = 0; i < productosEnCarrito.length; i++) {
+    // Asigno el evento al cambiar la cantidad de cuotas
+    let selCuotas = document.getElementById("cuotas");
+    selCuotas.addEventListener('change', cargarPago);
 
-        let oProductoEnCarrito = productosEnCarrito[i];
+    // Busco los botones de agregar cantidad
+    const btnsAgregarCantidad = document.getElementsByClassName("spanMas");
 
-        oCarrito.agregarProductoAlCarrito(oProductoEnCarrito, oProductoEnCarrito.cantidad);
+    // Les asigno el evento click que acciona agregar mas cantidad del producto al carrito 
+    for (const btn of btnsAgregarCantidad) {
+        btn.addEventListener('click', agregarCantidadAlCarrito);
     }
 
+    // Busco los botones de sacar cantidad
+    const btnsSacarCantidad = document.getElementsByClassName("spanMenos");
+
+    // Les asigno el evento click que acciona sacar cantidad del producto al carrito 
+    for (const btn of btnsSacarCantidad) {
+        btn.addEventListener('click', sacarCantidadAlCarrito);
+    }
+
+    // Busco los botones de quitar producto (tachito)
+    const btnsQuitar = document.getElementsByClassName("trashIcon");
+
+    // Les asigno el evento click que acciona quitar el producto del carrito 
+    for (const btn of btnsQuitar) {
+        btn.addEventListener('click', quitarDelCarrito);
+    }
+
+    return 1;
 }
 
 // Cargo los productos del carrito en la pagina con elementos HTML
@@ -501,8 +507,11 @@ function cargarCarrito() {
 
         let oProducto = productosDisponibles[i];
 
+        // Desestructuro el objeto en variables
+        let {id, descripcion, precio, stock, pathIMG} = oProducto;
+
         // Agrego los productos ingresados como objetos en el array global de productos
-        listaDeProductos.push(new Producto(oProducto.id, oProducto.descripcion, oProducto.precio, oProducto.stock, oProducto.pathIMG));
+        listaDeProductos.push(new Producto(id, descripcion, precio, stock, pathIMG));
 
     }
 
@@ -524,7 +533,11 @@ function cargarCarrito() {
     // Cargo todos los productos del storage en el array listaDeProductos para tener los metodos
     for (let i = 0; i < productosEnCarrito.length; i++) {
         let oProductoEnCarrito = productosEnCarrito[i];
-        let oProductoDisponible = obtenerProducto(oProductoEnCarrito.id);
+
+        // Desestructuro en variables
+        let {id, cantidad} = oProductoEnCarrito;
+
+        let oProductoDisponible = obtenerProducto(id);
 
         let oListItem = document.createElement("li");
 
@@ -562,7 +575,7 @@ function cargarCarrito() {
         let oSmall = document.createElement("small");
 
         oSmall.classList = "text-muted smallCantidad";
-        oSmall.innerText = oProductoEnCarrito.cantidad;
+        oSmall.innerText = cantidad;
 
         oDivCantidad.appendChild(oSmall);
 
@@ -577,9 +590,9 @@ function cargarCarrito() {
         let oID = document.createElement("input");
 
         oID.type = "hidden";
-        oID.id = "prdID" + oProductoEnCarrito.id;
+        oID.id = "prdID" + id;
         oID.name = oID.id;
-        oID.value = oProductoEnCarrito.id;
+        oID.value = id;
 
         oDiv.appendChild(oID);
 
@@ -626,7 +639,37 @@ function cargarCarrito() {
 
 }
 
+// Guardo los productos disponibles y los productos del carrito en el storage
+function guardarEnStorage() {
 
-/*********************************** INICIO DEL PROGRAMA *****************************/
+    // Guardo en el storage los productos como array de objetos Producto
+    localStorage.setItem(PRODUCTOS_DISPONIBLES_KEY, JSON.stringify(listaDeProductos));
+
+    // Guardo en el storage el carrito como array de objetos ProductoEnCarrito
+    localStorage.setItem(PRODUCTOS_CARRITO_KEY, JSON.stringify(oCarrito.obtenerListaDeProductosDelCarrito()));
+}
+
+// Carga en el objeto Global oCarrito, el array de productos carrito almacenados en el storage
+function cargarCarritoDelStorage() {
+
+    let productosEnCarrito = JSON.parse(localStorage.getItem(PRODUCTOS_CARRITO_KEY));
+
+    oCarrito = new Carrito();
+
+    // Cargo todos los productos del storage en el array listaDeProductos para tener los metodos
+    for (let i = 0; i < productosEnCarrito.length; i++) {
+
+        let oProductoEnCarrito = productosEnCarrito[i];
+
+        oCarrito.agregarProductoAlCarrito(oProductoEnCarrito, oProductoEnCarrito.cantidad);
+    }
+
+}
+
+/*************************************************************************************************/
+/*                                                                                               */
+/*                                       INICIO DEL PROGRAMA                                     */
+/*                                                                                               */
+/*************************************************************************************************/
 
 agregarEventos();

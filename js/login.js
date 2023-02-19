@@ -1,3 +1,10 @@
+
+/*************************************************************************************************/
+/*                                                                                               */
+/*                                            CLASE                                              */
+/*                                                                                               */
+/*************************************************************************************************/
+
 class Usuario {
     constructor(usuario, password, recordar) {
         this.usuario = usuario;
@@ -6,24 +13,18 @@ class Usuario {
     }
 }
 
-/********** FUNCIONES PRINCIPALES *********/
+/*************************************************************************************************/
+/*                                                                                               */
+/*                                 FUNCIONES PRINCIPALES                                         */
+/*                                                                                               */
+/*************************************************************************************************/
 
 // Asigna los eventos a los elementos
 function agregarEventos() {
 
-    // Asigno el evento al documento para cargar los productos del carrito cuando se cargue la pagina
-    //document.addEventListener('DOMContentLoaded', cargarCarrito);
-
-    // Asigno el evento para mostrar la etiqueta con el monto a pagar cuando se termine de cargar la pagina
-    //window.addEventListener('pageshow', cargarPago);
-
     // Asigno el evento al boton de Aceptar
     let btnAceptar = document.getElementById("btnAceptar");
     btnAceptar.addEventListener('click', ingresarUsuario);
-
-    // Asigno el evento al documento para guardar los datos al storage
-    //window.addEventListener('pagehide', guardarEnStorage);
-
 
     return 1;
 }
@@ -72,6 +73,10 @@ function ingresarUsuario() {
 }
 
 
-/*********************************** INICIO DEL PROGRAMA *****************************/
+/*************************************************************************************************/
+/*                                                                                               */
+/*                                   INICIO DEL PROGRAMA                                         */
+/*                                                                                               */
+/*************************************************************************************************/
 
 agregarEventos();
