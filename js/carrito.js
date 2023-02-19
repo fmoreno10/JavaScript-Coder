@@ -545,7 +545,17 @@ function cargarCarrito() {
 
         oLista.appendChild(oListItem);
 
+        let oIMG = document.createElement("img");
+        oIMG.classList = "imgMiniatura";
+    
+        oIMG.src = "." + oProductoDisponible.pathIMG; // Agregar de producto
+        oIMG.alt = oProductoDisponible.descripcion; // Agregar de producto
+    
+        oListItem.appendChild(oIMG);
+
         let oDiv = document.createElement("div");
+
+        oDiv.classList = "flex-grow-1";
 
         oListItem.appendChild(oDiv);
 
